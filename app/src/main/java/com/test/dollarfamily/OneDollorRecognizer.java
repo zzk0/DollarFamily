@@ -14,6 +14,10 @@ public class OneDollorRecognizer extends GestureRecognizer {
     }
 
     public String recognize(List<GPoint2D> points) {
+        if (gesturePoints.size() == 0) {
+            return null;
+        }
+
         List<GPoint2D> afterResample = resample(points);
         List<GPoint2D> afterRotate = rotate(afterResample);
         List<GPoint2D> afterScale = scale(afterRotate);
@@ -23,7 +27,7 @@ public class OneDollorRecognizer extends GestureRecognizer {
         float nearest = bestDistance(afterTranslate, gesturePoints.get(0), -45.0f, 45.0f, 2.0f);
         for (int i = 1; i < gesturePoints.size(); i++) {
             float distance = bestDistance(afterTranslate, gesturePoints.get(i), -45.0f, 45.0f, 2.0f);
-            if (nearest < distance) {
+            if (nearest > distance) {
                 nearest = distance;
                 matchId = i;
             }
@@ -55,7 +59,7 @@ public class OneDollorRecognizer extends GestureRecognizer {
             GPoint2D point0 = points.get(i - 1);
             GPoint2D point1 = points.get(i);
             float distance = point0.distanceTo(point1);
-            if (acclumateDis + distance > equidistance) {
+            if (acclumateDis + distance >= equidistance) {
                 float newPointX = point0.x + ((equidistance - acclumateDis) / distance) * (point1.x - point0.x);
                 float newPointY = point0.y + ((equidistance - acclumateDis) / distance) * (point1.y - point0.y);
                 GPoint2D newPoint = new GPoint2D(newPointX, newPointY);
@@ -66,6 +70,10 @@ public class OneDollorRecognizer extends GestureRecognizer {
             else {
                 acclumateDis = acclumateDis + distance;
             }
+        }
+
+        if (newPoints.size() != 64) {
+            newPoints.add(points.get(points.size() - 1));
         }
 
         return newPoints;
@@ -99,7 +107,7 @@ public class OneDollorRecognizer extends GestureRecognizer {
             if (minX > point.x) minX = point.x;
             if (maxX < point.x) maxX = point.x;
             if (minY > point.y) minY = point.y;
-            if (maxY > point.y) maxY = point.y;
+            if (maxY < point.y) maxY = point.y;
         }
         float width = maxX - minX;
         float height = maxY - minY;

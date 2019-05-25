@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">DollarFamily</string>
+    <string name="btn_recognize">Recognize</string>
+    <string name="btn_clear">Clear</string>
+    <string name="btn_add">Add</string>
+    <string name="text_hint">Press Recognize or Clear</string>
 </resources>

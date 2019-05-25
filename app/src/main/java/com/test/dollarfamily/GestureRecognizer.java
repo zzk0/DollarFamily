@@ -1,9 +1,7 @@
 package com.test.dollarfamily;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public abstract class GestureRecognizer {
 
@@ -16,6 +14,8 @@ public abstract class GestureRecognizer {
     }
 
     public abstract String recognize(List<GPoint2D> points);
+
+    public abstract void addSample(List<GPoint2D> points, String gestureTypename);
 
     protected float pathLength(List<GPoint2D> points) {
         float sum = 0.0f;
