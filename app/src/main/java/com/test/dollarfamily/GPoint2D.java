@@ -3,10 +3,18 @@ package com.test.dollarfamily;
 public class GPoint2D {
     public float x;
     public float y;
+    public int strokeId;
 
     public GPoint2D(float xx, float yy) {
         this.x = xx;
         this.y = yy;
+        this.strokeId = 0;
+    }
+
+    public GPoint2D(float xx, float yy, int id) {
+        this.x = xx;
+        this.y = yy;
+        this.strokeId = id;
     }
 
     public float distanceTo(GPoint2D another) {

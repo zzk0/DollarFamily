@@ -53,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
     private GestureRecognizer currentRecognizer;
     private GestureRecognizer[] recognizers = new GestureRecognizer[3];
     private List<GPoint2D> lastPoints;
+    private int strokeId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,14 +87,24 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onGestureEnded(GestureOverlayView overlay, MotionEvent event) {
-                List<GPoint2D> points = new ArrayList<>();
-                for (GesturePoint point : overlay.getCurrentStroke()) {
-                    GPoint2D newPoint = new GPoint2D(point.x, point.y);
-                    points.add(newPoint);
-                }
-                lastPoints = points;
                 if (currentRecognizer == recognizers[0]) {
+                    List<GPoint2D> points = new ArrayList<>();
+                    for (GesturePoint point : overlay.getCurrentStroke()) {
+                        GPoint2D newPoint = new GPoint2D(point.x, point.y);
+                        points.add(newPoint);
+                    }
+                    lastPoints = points;
                     doRecognize();
+                }
+                else if (currentRecognizer == recognizers[1]) {
+                    if (lastPoints == null) {
+                        lastPoints = new ArrayList<>();
+                    }
+                    for (GesturePoint point : overlay.getCurrentStroke()) {
+                        GPoint2D newPoint = new GPoint2D(point.x, point.y, strokeId);
+                        lastPoints.add(newPoint);
+                    }
+                    strokeId = strokeId + 1;
                 }
             }
 
@@ -119,9 +130,10 @@ public class MainActivity extends AppCompatActivity {
 
         // Gesture Recognizer
         recognizers[0] = new OneDollorRecognizer(64);
-        recognizers[1] = new OneDollorRecognizer(64);
+        recognizers[1] = new PRecognizer(96, 0.5f);
         recognizers[2] = new OneDollorRecognizer(64);
         currentRecognizer = recognizers[0];
+        strokeId = 0;
     }
 
     private View.OnTouchListener touch = new View.OnTouchListener() {
@@ -171,6 +183,8 @@ public class MainActivity extends AppCompatActivity {
                     doRecognize();
                     break;
                 case R.id.btn_clear:
+                    strokeId = 0;
+                    lastPoints.clear();
                     clearCanvas();
                 default:
                     break;

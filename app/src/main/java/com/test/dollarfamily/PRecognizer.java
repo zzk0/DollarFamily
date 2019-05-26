@@ -3,12 +3,14 @@ package com.test.dollarfamily;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OneDollorRecognizer extends GestureRecognizer {
+public class PRecognizer extends GestureRecognizer {
 
-    private static final float PHI = (float) (0.5 * (-1 + Math.sqrt(5)));
+    // 0.5 is recommend
+    public float epsilon;
 
-    public OneDollorRecognizer(int n) {
+    public PRecognizer(int n, float epsilon) {
         super(n);
+        this.epsilon = epsilon;
     }
 
     public String recognize(List<GPoint2D> points) {
@@ -22,9 +24,9 @@ public class OneDollorRecognizer extends GestureRecognizer {
         List<GPoint2D> afterTranslate = translate(afterScale);
 
         int matchId = 0;
-        float nearest = bestDistance(afterTranslate, gesturePoints.get(0), -45.0f, 45.0f, 2.0f);
+        float nearest = greedyCloudMatch(afterTranslate, gesturePoints.get(0));
         for (int i = 1; i < gesturePoints.size(); i++) {
-            float distance = bestDistance(afterTranslate, gesturePoints.get(i), -45.0f, 45.0f, 2.0f);
+            float distance = greedyCloudMatch(afterTranslate, gesturePoints.get(i));
             if (nearest > distance) {
                 nearest = distance;
                 matchId = i;
@@ -35,7 +37,7 @@ public class OneDollorRecognizer extends GestureRecognizer {
 
     /*
     Add a gesture sample.
-    The points will be resampled, rotated, scaled and translated
+    The points will be resampled, scaled and translated
      */
     public void addSample(List<GPoint2D> points, String gestureTypename) {
         List<GPoint2D> pointsCopy = new ArrayList<>();
@@ -43,18 +45,65 @@ public class OneDollorRecognizer extends GestureRecognizer {
             pointsCopy.add(points.get(i));
         }
         List<GPoint2D> afterResample = resample(pointsCopy);
-        List<GPoint2D> afterRotate = rotate(afterResample);
-        List<GPoint2D> afterScale = scale(afterRotate);
+        List<GPoint2D> afterScale = scale(afterResample);
         List<GPoint2D> afterTranslate = translate(afterScale);
 
         gesturePoints.add(afterTranslate);
         correspondType.add(gestureTypename);
     }
 
+    private float greedyCloudMatch(List<GPoint2D> candidate, List<GPoint2D> sample) {
+        int step = (int) Math.pow(candidate.size(), 1 - epsilon);
+        float minLength = Float.MAX_VALUE;
+        for (int i = 0; i < candidate.size(); i += step) {
+            float d0 = weightedLengthSum(candidate, sample, i);
+            float d1 = weightedLengthSum(sample, candidate, i);
+            float min = d0 < d1 ? d0 : d1;
+            if (minLength > min) minLength = min;
+        }
+        return minLength;
+    }
+
+    private float weightedLengthSum(List<GPoint2D> candidate, List<GPoint2D> sample, int start) {
+        int n = candidate.size();
+        boolean[] matched = new boolean[n];
+        for (int i = 0; i < n; i++) {
+            matched[i] = false;
+        }
+        int i = start;
+        int count = 0;
+        float sum = 0.0f;
+        do {
+            count = count + 1;
+            GPoint2D point0 = candidate.get(i);
+            float minDistance = Float.MAX_VALUE;
+            int matchIndex = -1;
+            for (int j = 0; j < n; j++) {
+                if (matched[j]) continue;
+                GPoint2D point1 = sample.get(i);
+                float dis = point0.distanceTo(point1);
+                if (minDistance > dis) {
+                    matchIndex = j;
+                    minDistance = dis;
+                }
+            }
+            if (matchIndex == -1) break;
+            matched[matchIndex] = true;
+            float weight = 1 - (count - 1) / n;
+            sum = sum + weight * minDistance;
+            i = (i + 1 + n) % n;
+        } while (i != start);
+        return sum;
+    }
+
     protected float pathLength(List<GPoint2D> points) {
         float sum = 0.0f;
         for (int i = 1; i < points.size(); i++) {
-            sum = sum + points.get(i - 1).distanceTo(points.get(i));
+            GPoint2D point0 = points.get(i - 1);
+            GPoint2D point1 = points.get(i);
+            if (point0.strokeId == point1.strokeId) {
+                sum = sum + point0.distanceTo(point1);
+            }
         }
         return sum;
     }
@@ -68,6 +117,7 @@ public class OneDollorRecognizer extends GestureRecognizer {
         for (int i = 1; i < points.size(); i++) {
             GPoint2D point0 = points.get(i - 1);
             GPoint2D point1 = points.get(i);
+            if (point0.strokeId != point1.strokeId) continue;
             float distance = point0.distanceTo(point1);
             if (acclumateDis + distance >= equidistance) {
                 float newPointX = point0.x + ((equidistance - acclumateDis) / distance) * (point1.x - point0.x);
@@ -87,34 +137,5 @@ public class OneDollorRecognizer extends GestureRecognizer {
         }
 
         return newPoints;
-    }
-
-    private float bestDistance(List<GPoint2D> candidate, List<GPoint2D> sample, float thetaA, float thetaB, float delta) {
-        float x1 = PHI * thetaA + (1 - PHI) * thetaB;
-        float f1 = distanceAtAngle(candidate, sample, x1);
-        float x2 = (1 - PHI) * thetaA + PHI * thetaB;
-        float f2 = distanceAtAngle(candidate, sample, x2);
-        while ((float) Math.abs(thetaA - thetaB) > delta) {
-            if (f1 < f2) {
-                thetaB = x2;
-                x2 = x1;
-                f2 = f1;
-                x1 = PHI * thetaA + (1 - PHI) * thetaB;
-                f1 = distanceAtAngle(candidate, sample, x1);
-            }
-            else {
-                thetaA = x1;
-                x1 = x2;
-                f1 = f2;
-                x2 = (1 - PHI) * thetaA + PHI * thetaB;
-                f2 = distanceAtAngle(candidate, sample, x2);
-            }
-        }
-        return f1 < f2 ? f1 : f2;
-    }
-
-    private float distanceAtAngle(List<GPoint2D> candidate, List<GPoint2D> sample, float theta) {
-        List<GPoint2D> points = rotateBy(candidate, theta);
-        return EuclideanDistance(points, sample);
     }
 }
