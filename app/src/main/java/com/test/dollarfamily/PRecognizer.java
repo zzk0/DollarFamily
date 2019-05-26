@@ -19,8 +19,7 @@ public class PRecognizer extends GestureRecognizer {
         }
 
         List<GPoint2D> afterResample = resample(points);
-        List<GPoint2D> afterRotate = rotate(afterResample);
-        List<GPoint2D> afterScale = scale(afterRotate);
+        List<GPoint2D> afterScale = scale(afterResample);
         List<GPoint2D> afterTranslate = translate(afterScale);
 
         int matchId = 0;
@@ -122,7 +121,7 @@ public class PRecognizer extends GestureRecognizer {
             if (acclumateDis + distance >= equidistance) {
                 float newPointX = point0.x + ((equidistance - acclumateDis) / distance) * (point1.x - point0.x);
                 float newPointY = point0.y + ((equidistance - acclumateDis) / distance) * (point1.y - point0.y);
-                GPoint2D newPoint = new GPoint2D(newPointX, newPointY);
+                GPoint2D newPoint = new GPoint2D(newPointX, newPointY, point0.strokeId);
                 newPoints.add(newPoint);
                 points.add(i, newPoint);
                 acclumateDis = 0;

@@ -54,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
     private GestureRecognizer[] recognizers = new GestureRecognizer[3];
     private List<GPoint2D> lastPoints;
     private int strokeId;
+    private boolean needClear;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,6 +135,7 @@ public class MainActivity extends AppCompatActivity {
         recognizers[2] = new OneDollorRecognizer(64);
         currentRecognizer = recognizers[0];
         strokeId = 0;
+        needClear = false;
     }
 
     private View.OnTouchListener touch = new View.OnTouchListener() {
@@ -144,7 +146,9 @@ public class MainActivity extends AppCompatActivity {
         public boolean onTouch(View v, MotionEvent event) {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    if (baseBitmap == null || currentRecognizer == recognizers[0]) {
+                    if (baseBitmap == null || needClear) {
+                        if (lastPoints != null) lastPoints.clear();
+                        needClear = false;
                         baseBitmap = Bitmap.createBitmap(imageView.getWidth(), imageView.getHeight(), Bitmap.Config.ARGB_8888);
                         canvas = new Canvas(baseBitmap);
                         canvas.drawColor(canvasColor);
@@ -177,6 +181,7 @@ public class MainActivity extends AppCompatActivity {
         public void onClick(View v) {
             switch (v.getId()) {
                 case R.id.btn_add:
+                    needClear = true;
                     currentRecognizer.addSample(lastPoints, editTextName.getText().toString());
                     break;
                 case R.id.btn_recognize:
@@ -210,5 +215,6 @@ public class MainActivity extends AppCompatActivity {
         }
         gestureType = gestureType + "\nTime cost: " + (endTime - startTime) / 1000.0f;
         textViewResult.setText(gestureType);
+        needClear = true;
     }
 }
