@@ -14,4 +14,18 @@ public class GPoint2D {
         float disY = this.y - another.y;
         return (float) Math.sqrt(disX * disX + disY * disY);
     }
+
+    @Override
+    public boolean equals(Object anObject) {
+        if (this == anObject) {
+            return true;
+        }
+        if (anObject instanceof GPoint2D) {
+            GPoint2D point = (GPoint2D) anObject;
+            if (Math.abs(this.x - point.x) < 0.0001 && Math.abs(this.y - point.y) < 0.0001) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
