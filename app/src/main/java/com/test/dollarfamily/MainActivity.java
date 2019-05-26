@@ -93,11 +93,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 lastPoints = points;
                 if (currentRecognizer == recognizers[0]) {
-                    String gestureType = currentRecognizer.recognize(lastPoints);
-                    if (gestureType == null) {
-                        gestureType = "Try adding sample !";
-                    }
-                    textViewResult.setText(gestureType);
+                    doRecognize();
                 }
             }
 
@@ -172,11 +168,7 @@ public class MainActivity extends AppCompatActivity {
                     currentRecognizer.addSample(lastPoints, editTextName.getText().toString());
                     break;
                 case R.id.btn_recognize:
-                    String gestureType = currentRecognizer.recognize(lastPoints);
-                    if (gestureType == null) {
-                        gestureType = "Try adding sample !";
-                    }
-                    textViewResult.setText(gestureType);
+                    doRecognize();
                     break;
                 case R.id.btn_clear:
                     clearCanvas();
@@ -193,5 +185,16 @@ public class MainActivity extends AppCompatActivity {
             canvas.drawColor(canvasColor);
             imageView.setImageBitmap(baseBitmap);
         }
+    }
+
+    private void doRecognize() {
+        long startTime = System.currentTimeMillis();
+        String gestureType = currentRecognizer.recognize(lastPoints);
+        long endTime = System.currentTimeMillis();
+        if (gestureType == null) {
+            gestureType = "Try adding sample !";
+        }
+        gestureType = gestureType + "\nTime cost: " + (endTime - startTime) / 1000.0f;
+        textViewResult.setText(gestureType);
     }
 }

@@ -40,7 +40,11 @@ public class OneDollorRecognizer extends GestureRecognizer {
     The points will be resampled, rotated, scaled and translated
      */
     public void addSample(List<GPoint2D> points, String gestureTypename) {
-        List<GPoint2D> afterResample = resample(points);
+        List<GPoint2D> pointsCopy = new ArrayList<>();
+        for (int i = 0; i < points.size(); i++) {
+            pointsCopy.add(points.get(i));
+        }
+        List<GPoint2D> afterResample = resample(pointsCopy);
         List<GPoint2D> afterRotate = rotate(afterResample);
         List<GPoint2D> afterScale = scale(afterRotate);
         List<GPoint2D> afterTranslate = translate(afterScale);
