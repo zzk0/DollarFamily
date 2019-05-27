@@ -78,10 +78,18 @@ public abstract class GestureRecognizer {
         return point;
     }
 
-    protected float EuclideanDistance(List<GPoint2D> candidate, List<GPoint2D> sample) {
+    protected float euclideanDistance(List<GPoint2D> candidate, List<GPoint2D> sample) {
         float sum = 0.0f;
         for (int i = 0; i < candidate.size(); i++) {
             sum = sum + candidate.get(i).distanceTo(sample.get(i));
+        }
+        return sum / candidate.size();
+    }
+
+    protected float squareEuclideanDistance(List<GPoint2D> candidate, List<GPoint2D> sample) {
+        float sum = 0.0f;
+        for (int i = 0; i < candidate.size(); i++) {
+            sum = sum + candidate.get(i).squareDistanceTo(sample.get(i));
         }
         return sum / candidate.size();
     }

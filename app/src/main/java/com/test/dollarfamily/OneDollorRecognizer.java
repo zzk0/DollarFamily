@@ -127,6 +127,6 @@ public class OneDollorRecognizer extends GestureRecognizer {
             points.add(new GPoint2D(point.x, point.y));
         }
         rotateBy(points, theta);
-        return EuclideanDistance(points, sample);
+        return euclideanDistance(points, sample);
     }
 }

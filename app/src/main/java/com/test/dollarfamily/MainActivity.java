@@ -107,6 +107,16 @@ public class MainActivity extends AppCompatActivity {
                     }
                     strokeId = strokeId + 1;
                 }
+                else if (currentRecognizer == recognizers[2]) {
+                    if (lastPoints == null) {
+                        lastPoints = new ArrayList<>();
+                    }
+                    for (GesturePoint point : overlay.getCurrentStroke()) {
+                        GPoint2D newPoint = new GPoint2D(point.x, point.y, strokeId);
+                        lastPoints.add(newPoint);
+                    }
+                    strokeId = strokeId + 1;
+                }
             }
 
             @Override
@@ -132,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
         // Gesture Recognizer
         recognizers[0] = new OneDollorRecognizer(64);
         recognizers[1] = new PRecognizer(96, 0.5f);
-        recognizers[2] = new OneDollorRecognizer(64);
+        recognizers[2] = new QRecognizer(96, 0.5f);
         currentRecognizer = recognizers[0];
         strokeId = 0;
         needClear = false;
