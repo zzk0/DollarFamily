@@ -5,18 +5,6 @@ import java.util.List;
 
 public class QRecognizer extends GestureRecognizer {
 
-    /*
-    The coordinate transform matrix:
-    [0, 64] x [0, 64] -> [-1, 1] x [-1, 1]
-    [2/64, 0, -1,
-     0, 2/64, -1,
-     0, 0,     1]
-
-    [-1, 1] x [-1, 1] -> [0, 64] x [0, 64]
-    [32, 0, 32,
-     0, 32, 32,
-     0, 0,   1]
-    */
     class Grid {
         // The table is 64x64 as recommend in the paper
         int correspondPointId[][];
@@ -27,16 +15,13 @@ public class QRecognizer extends GestureRecognizer {
             for (int i = 0; i < 64; i++) {
                 correspondPointId[i] = new int[64];
             }
-            GPoint2D point = new GPoint2D(-1.0f, -1.0f);
             for (int i = 0; i < 64; i++) {
-                point.x = -1.0f;
-                point.y = point.y + i * 2.0f / 63;
                 for (int j = 0; j < 64; j++) {
-                    point.x = point.x + j * 2.0f / 63;
+                    GPoint2D point = new GPoint2D(i, j);
                     int minId = 0;
-                    float minDis = point.distanceTo(points.get(0));
+                    float minDis = point.squareDistanceTo(points.get(0));
                     for (int k = 1; k < sampleNumber; k++) {
-                        float dis = point.distanceTo(points.get(k));
+                        float dis = point.squareDistanceTo(points.get(k));
                         if (minDis > dis) {
                             minDis = dis;
                             minId = k;
@@ -49,7 +34,9 @@ public class QRecognizer extends GestureRecognizer {
 
         // The input x, y coordinate have been processed
         public int lookUp(float x, float y) {
-            return 0;
+            int xx = (int) (x + 0.5f);
+            int yy = (int) (y + 0.5f);
+            return correspondPointId[xx][yy];
         }
     }
 
@@ -69,8 +56,8 @@ public class QRecognizer extends GestureRecognizer {
         }
 
         List<GPoint2D> processingPoints = resample(points);
-        scale(processingPoints);
         translate(processingPoints);
+        scale(processingPoints);
         Grid grid = new Grid(processingPoints);
 
         int matchId = 0;
@@ -88,8 +75,8 @@ public class QRecognizer extends GestureRecognizer {
     @Override
     public void addSample(List<GPoint2D> points, String gestureTypename) {
         List<GPoint2D> processingPoints = resample(points);
-        scale(processingPoints);
         translate(processingPoints);
+        scale(processingPoints);
 
         gesturePoints.add(processingPoints);
         correspondType.add(gestureTypename);
@@ -145,6 +132,26 @@ public class QRecognizer extends GestureRecognizer {
             }
         }
         return sum;
+    }
+
+    @Override
+    protected void scale(List<GPoint2D> points) {
+        float minX = Float.MAX_VALUE;
+        float maxX = Float.MIN_VALUE;
+        float minY = Float.MAX_VALUE;
+        float maxY = Float.MIN_VALUE;
+        for (GPoint2D point : points) {
+            if (minX > point.x) minX = point.x;
+            if (maxX < point.x) maxX = point.x;
+            if (minY > point.y) minY = point.y;
+            if (maxY < point.y) maxY = point.y;
+        }
+        float width = maxX - minX;
+        float height = maxY - minY;
+        for (GPoint2D point : points) {
+            point.x = (point.x - minX) / width * (64 - 1);
+            point.y = (point.y - minY) / height * (64 - 1);
+        }
     }
 
     private float CloudMatch(List<GPoint2D> candidate, List<GPoint2D> sample, Grid candidateGrid, Grid sampleGrid) {
