@@ -13,6 +13,7 @@ public class OneDollorRecognizer extends GestureRecognizer {
         super(n);
     }
 
+    @Override
     public String recognize(List<GPoint2D> points) {
         if (gesturePoints.size() == 0) {
             return null;
@@ -39,6 +40,7 @@ public class OneDollorRecognizer extends GestureRecognizer {
     Add a gesture sample.
     The points will be resampled, rotated, scaled and translated
      */
+    @Override
     public void addSample(List<GPoint2D> points, String gestureTypename) {
         List<GPoint2D> processingPoints = resample(points);
         rotate(processingPoints);
@@ -49,6 +51,7 @@ public class OneDollorRecognizer extends GestureRecognizer {
         correspondType.add(gestureTypename);
     }
 
+    @Override
     protected float pathLength(List<GPoint2D> points) {
         float sum = 0.0f;
         for (int i = 1; i < points.size(); i++) {

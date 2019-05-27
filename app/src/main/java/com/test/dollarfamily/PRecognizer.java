@@ -13,6 +13,7 @@ public class PRecognizer extends GestureRecognizer {
         this.epsilon = epsilon;
     }
 
+    @Override
     public String recognize(List<GPoint2D> points) {
         if (gesturePoints.size() == 0) {
             return null;
@@ -38,6 +39,7 @@ public class PRecognizer extends GestureRecognizer {
     Add a gesture sample.
     The points will be resampled, scaled and translated
      */
+    @Override
     public void addSample(List<GPoint2D> points, String gestureTypename) {
         List<GPoint2D> processingPoints = resample(points);
         scale(processingPoints);
@@ -91,6 +93,7 @@ public class PRecognizer extends GestureRecognizer {
         return sum;
     }
 
+    @Override
     protected float pathLength(List<GPoint2D> points) {
         float sum = 0.0f;
         for (int i = 1; i < points.size(); i++) {
