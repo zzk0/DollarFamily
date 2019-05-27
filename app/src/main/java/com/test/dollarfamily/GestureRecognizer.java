@@ -23,26 +23,24 @@ public abstract class GestureRecognizer {
 
     protected abstract List<GPoint2D> resample(List<GPoint2D> points);
 
-    protected List<GPoint2D> rotate(List<GPoint2D> points) {
+    protected void rotate(List<GPoint2D> points) {
         GPoint2D center = centroid(points);
         GPoint2D first = points.get(0);
         float theta = (float) Math.atan2(first.y - center.y, first.x - center.x);
-        return rotateBy(points, theta);
+        rotateBy(points, theta);
     }
 
-    protected List<GPoint2D> rotateBy(List<GPoint2D> points, float theta) {
+    protected void rotateBy(List<GPoint2D> points, float theta) {
         GPoint2D center = centroid(points);
-        List<GPoint2D> newPoints = new ArrayList<>();
         for (GPoint2D point : points) {
             double newPointX = (point.x - center.x) * Math.cos(theta) - (point.x - center.x) * Math.sin(theta) + center.x;
             double newPointY = (point.y - center.y) * Math.sin(theta) + (point.y - center.y) * Math.cos(theta) + center.y;
-            GPoint2D newPoint = new GPoint2D((float) newPointX, (float) newPointY);
-            newPoints.add(newPoint);
+            point.x = (float) newPointX;
+            point.y = (float) newPointY;
         }
-        return newPoints;
     }
 
-    protected List<GPoint2D> scale(List<GPoint2D> points) {
+    protected void scale(List<GPoint2D> points) {
         float minX = Float.MAX_VALUE;
         float maxX = Float.MIN_VALUE;
         float minY = Float.MAX_VALUE;
@@ -55,26 +53,18 @@ public abstract class GestureRecognizer {
         }
         float width = maxX - minX;
         float height = maxY - minY;
-        List<GPoint2D> newPoints = new ArrayList<>();
         for (GPoint2D point : points) {
-            float newPointX = point.x * (1 / width);
-            float newPointY = point.y * (1 / height);
-            GPoint2D newPoint = new GPoint2D(newPointX, newPointY);
-            newPoints.add(newPoint);
+            point.x = point.x * (1 / width);
+            point.y = point.y * (1 / height);
         }
-        return newPoints;
     }
 
-    protected List<GPoint2D> translate(List<GPoint2D> points) {
+    protected void translate(List<GPoint2D> points) {
         GPoint2D center = centroid(points);
-        List<GPoint2D> newPoints = new ArrayList<>();
         for (GPoint2D point : points) {
-            float newPointX = point.x - center.x;
-            float newPointY = point.y - center.y;
-            GPoint2D newPoint = new GPoint2D(newPointX, newPointY);
-            newPoints.add(newPoint);
+            point.x = point.x - center.x;
+            point.y = point.y - center.y;
         }
-        return newPoints;
     }
 
     protected GPoint2D centroid(List<GPoint2D> points) {

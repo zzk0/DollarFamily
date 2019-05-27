@@ -1,5 +1,7 @@
 package com.test.dollarfamily;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,15 +18,15 @@ public class OneDollorRecognizer extends GestureRecognizer {
             return null;
         }
 
-        List<GPoint2D> afterResample = resample(points);
-        List<GPoint2D> afterRotate = rotate(afterResample);
-        List<GPoint2D> afterScale = scale(afterRotate);
-        List<GPoint2D> afterTranslate = translate(afterScale);
+        List<GPoint2D> processingPoints = resample(points);
+        rotate(processingPoints);
+        scale(processingPoints);
+        translate(processingPoints);
 
         int matchId = 0;
-        float nearest = bestDistance(afterTranslate, gesturePoints.get(0), -45.0f, 45.0f, 2.0f);
+        float nearest = bestDistance(processingPoints, gesturePoints.get(0), -45.0f, 45.0f, 2.0f);
         for (int i = 1; i < gesturePoints.size(); i++) {
-            float distance = bestDistance(afterTranslate, gesturePoints.get(i), -45.0f, 45.0f, 2.0f);
+            float distance = bestDistance(processingPoints, gesturePoints.get(i), -45.0f, 45.0f, 2.0f);
             if (nearest > distance) {
                 nearest = distance;
                 matchId = i;
@@ -38,16 +40,12 @@ public class OneDollorRecognizer extends GestureRecognizer {
     The points will be resampled, rotated, scaled and translated
      */
     public void addSample(List<GPoint2D> points, String gestureTypename) {
-        List<GPoint2D> pointsCopy = new ArrayList<>();
-        for (int i = 0; i < points.size(); i++) {
-            pointsCopy.add(points.get(i));
-        }
-        List<GPoint2D> afterResample = resample(pointsCopy);
-        List<GPoint2D> afterRotate = rotate(afterResample);
-        List<GPoint2D> afterScale = scale(afterRotate);
-        List<GPoint2D> afterTranslate = translate(afterScale);
+        List<GPoint2D> processingPoints = resample(points);
+        rotate(processingPoints);
+        scale(processingPoints);
+        translate(processingPoints);
 
-        gesturePoints.add(afterTranslate);
+        gesturePoints.add(processingPoints);
         correspondType.add(gestureTypename);
     }
 
@@ -59,7 +57,13 @@ public class OneDollorRecognizer extends GestureRecognizer {
         return sum;
     }
 
-    protected List<GPoint2D> resample(List<GPoint2D> points) {
+    protected List<GPoint2D> resample(List<GPoint2D> input) {
+        // Copy the data to prevent change origin input
+        List<GPoint2D> points = new ArrayList<>();
+        for (GPoint2D point : input) {
+            points.add(new GPoint2D(point.x, point.y));
+        }
+
         float equidistance = pathLength(points) / (sampleNumber - 1);
         float acclumateDis = 0.0f;
         List<GPoint2D> newPoints = new ArrayList<>();
@@ -82,6 +86,7 @@ public class OneDollorRecognizer extends GestureRecognizer {
             }
         }
 
+        // the last may not include due to float compare
         if (newPoints.size() != sampleNumber) {
             newPoints.add(points.get(points.size() - 1));
         }
@@ -94,7 +99,7 @@ public class OneDollorRecognizer extends GestureRecognizer {
         float f1 = distanceAtAngle(candidate, sample, x1);
         float x2 = (1 - PHI) * thetaA + PHI * thetaB;
         float f2 = distanceAtAngle(candidate, sample, x2);
-        while ((float) Math.abs(thetaA - thetaB) > delta) {
+        while (Math.abs(thetaA - thetaB) > delta) {
             if (f1 < f2) {
                 thetaB = x2;
                 x2 = x1;
@@ -114,7 +119,11 @@ public class OneDollorRecognizer extends GestureRecognizer {
     }
 
     private float distanceAtAngle(List<GPoint2D> candidate, List<GPoint2D> sample, float theta) {
-        List<GPoint2D> points = rotateBy(candidate, theta);
+        List<GPoint2D> points = new ArrayList<>();
+        for (GPoint2D point : candidate) {
+            points.add(new GPoint2D(point.x, point.y));
+        }
+        rotateBy(points, theta);
         return EuclideanDistance(points, sample);
     }
 }

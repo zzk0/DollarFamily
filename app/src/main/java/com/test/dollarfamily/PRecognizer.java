@@ -18,14 +18,14 @@ public class PRecognizer extends GestureRecognizer {
             return null;
         }
 
-        List<GPoint2D> afterResample = resample(points);
-        List<GPoint2D> afterScale = scale(afterResample);
-        List<GPoint2D> afterTranslate = translate(afterScale);
+        List<GPoint2D> processingPoints = resample(points);
+        scale(processingPoints);
+        translate(processingPoints);
 
         int matchId = 0;
-        float nearest = greedyCloudMatch(afterTranslate, gesturePoints.get(0));
+        float nearest = greedyCloudMatch(processingPoints, gesturePoints.get(0));
         for (int i = 1; i < gesturePoints.size(); i++) {
-            float distance = greedyCloudMatch(afterTranslate, gesturePoints.get(i));
+            float distance = greedyCloudMatch(processingPoints, gesturePoints.get(i));
             if (nearest > distance) {
                 nearest = distance;
                 matchId = i;
@@ -39,15 +39,11 @@ public class PRecognizer extends GestureRecognizer {
     The points will be resampled, scaled and translated
      */
     public void addSample(List<GPoint2D> points, String gestureTypename) {
-        List<GPoint2D> pointsCopy = new ArrayList<>();
-        for (int i = 0; i < points.size(); i++) {
-            pointsCopy.add(points.get(i));
-        }
-        List<GPoint2D> afterResample = resample(pointsCopy);
-        List<GPoint2D> afterScale = scale(afterResample);
-        List<GPoint2D> afterTranslate = translate(afterScale);
+        List<GPoint2D> processingPoints = resample(points);
+        scale(processingPoints);
+        translate(processingPoints);
 
-        gesturePoints.add(afterTranslate);
+        gesturePoints.add(processingPoints);
         correspondType.add(gestureTypename);
     }
 
@@ -107,7 +103,13 @@ public class PRecognizer extends GestureRecognizer {
         return sum;
     }
 
-    protected List<GPoint2D> resample(List<GPoint2D> points) {
+    protected List<GPoint2D> resample(List<GPoint2D> input) {
+        // Copy the data to prevent change origin input
+        List<GPoint2D> points = new ArrayList<>();
+        for (GPoint2D point : input) {
+            points.add(new GPoint2D(point.x, point.y, point.strokeId));
+        }
+
         float equidistance = pathLength(points) / (sampleNumber - 1);
         float acclumateDis = 0.0f;
         List<GPoint2D> newPoints = new ArrayList<>();
